@@ -23,6 +23,51 @@ asmlinkage long sys_steal(long _pid)
 	return 0; 
 }
 
-/*Project2.2: */
+/*Project2.2: quadruples a process's time slice*/
+asmlinkage long sys_quad(long _pid)
+{
+	struct task_struct * proc = find_task_by_pid((int) _pid);
+	if(!proc)
+		return -1;
+	long timeslice = proc->time_slice;
+	proc->time_slice = timeslice * 4;
+	return proc->time_slice;
+}
+/*Project2.3: takes time slice from one process and adds to the other */
+asmlinkage long sys_swipe(long _target, long _victim)
+{
+	long timeslice;
 
+	/* exit if target and victim are the same */
+	if(_target == _victim)
+		return -1;
+	
+	/* get processes by pid */
+	struct task_struct * target = find_task_by_pid((int) _target);
+	struct task_struct * victim = find_task_by_pid((int) _victim);
+	
+	if(!target || !victim)
+		return -1;
+	
+	timeslice = victim->time_slice;
+	
+	/* get victim's child processes */
+	struct task_struct * child = victim->p_cptr;
+	if(!child)
+	{	
+		if(target == child)
+		{
+			target->time_slice += timeslice;
+			return timeslice;
+		}
+		while(!(child->p_ysptr) && child->p_ysptr != target)
+		{
+			child = child->p_ysptr;
+			timeslice += child->time_slice;
+		}
+		target->time_slice += timeslice;
+                return timeslice;
+	}
+
+}
 
