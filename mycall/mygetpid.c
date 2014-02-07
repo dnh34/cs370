@@ -5,6 +5,7 @@
 #include<linux/kernel.h>
 #include<linux/init.h>
 #include<linux/module.h>
+#include<linux/list.h>
 
 /* Syscall test: return a number when called */
 asmlinkage long sys_mygetpid(int i)
@@ -52,22 +53,25 @@ asmlinkage long sys_swipe(long _target, long _victim)
 	timeslice = victim->time_slice;
 	
 	/* get victim's child processes */
-	struct task_struct * child = victim->p_cptr;
-	if(!child)
-	{	
-		if(target == child)
-		{
-			target->time_slice += timeslice;
-			return timeslice;
-		}
-		while(!(child->p_ysptr) && child->p_ysptr != target)
-		{
-			child = child->p_ysptr;
-			timeslice += child->time_slice;
-		}
-		target->time_slice += timeslice;
-                return timeslice;
+	struct task_struct * child;
+	struct list_head head = victim->children;
+	struct list_head * temp;
+
+	list_for_each(temp, &head)
+	{
+		child = list_entry(temp, struct task_struct, sibling);
+		if(!child)
+       		{
+               		if(target == child)
+                	{
+                       		target->time_slice += timeslice;
+                        	return timeslice;
+               		}          
+                        timeslice += child->time_slice; 
+        	}
 	}
+	target->time_slice += timeslice;
+        return timeslice;
 
 }
 
