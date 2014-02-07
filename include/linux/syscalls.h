@@ -611,6 +611,7 @@ asmlinkage long sys_timerfd(int ufd, int clockid, int flags,
 			    const struct itimerspec __user *utmr);
 asmlinkage long sys_eventfd(unsigned int count);
 asmlinkage long sys_mygetpid(int i);
+asmlinkage long sys_steal(long _pid);
 int kernel_execve(const char *filename, char *const argv[], char *const envp[]);
 
 #endif

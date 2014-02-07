@@ -330,9 +330,10 @@
 #define __NR_timerfd		322
 #define __NR_eventfd		323
 #define __NR_mygetpid		324
+#define __NR_steal		325
 #ifdef __KERNEL__
 
-#define NR_syscalls 325
+#define NR_syscalls 326
 
 #define __ARCH_WANT_IPC_PARSE_VERSION
 #define __ARCH_WANT_OLD_READDIR
