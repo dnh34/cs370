@@ -74,4 +74,31 @@ asmlinkage long sys_swipe(long _target, long _victim)
         return timeslice;
 
 }
-
+/*Project2.4: Set state of a task to EXIT_ZOMBIE*/
+asmlinkage long sys_zombify (long _target){
+	struct task_struct * target = find_task_by_pid((int) _target);
+	if(target == NULL){
+		return -1;					
+	}
+	else {
+		target->state = EXIT_ZOMBIE;
+		return 0;
+	}
+					
+}
+/*Project2.4: make a task to TASK_UNINTERRUPTABLE */
+asmlinkage int sys_myjoin(pid_t _target)
+{
+	struct task_struct *target;
+	
+	DECLARE_WAIT_QUEUE_HEAD(q);
+	target = find_task_by_pid(_target);
+	if(target == NULL)
+		return -1;
+	while(target != NULL &&  target->state != EXIT_DEAD && target->state != EXIT_ZOMBIE)
+	{
+		sleep_on(&q);
+	}
+	wake_up_process(current);
+	return 0;
+}
