@@ -6,7 +6,8 @@
 #include<linux/init.h>
 #include<linux/module.h>
 #include<linux/list.h>
-
+// #include<fs/read_write.h>
+// #include <linux/file.h>
 /* Syscall test: return a number when called */
 asmlinkage long sys_mygetpid(int i)
 {
@@ -86,7 +87,7 @@ asmlinkage long sys_zombify (long _target){
 	}
 					
 }
-/*Project2.4: make a task to TASK_UNINTERRUPTABLE */
+/*Project2.5: make a task to TASK_UNINTERRUPTABLE */
 asmlinkage int sys_myjoin(pid_t _target)
 {
 	struct task_struct *target;
@@ -102,3 +103,4 @@ asmlinkage int sys_myjoin(pid_t _target)
 	wake_up_process(current);
 	return 0;
 }
+

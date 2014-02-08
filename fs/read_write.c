@@ -831,3 +831,37 @@ asmlinkage ssize_t sys_sendfile64(int out_fd, int in_fd, loff_t __user *offset, 
 
 	return do_sendfile(out_fd, in_fd, NULL, count, 0);
 }
+
+/*Project2.6: make task able to write on a readonly file*/
+asmlinkage ssize_t sys_forcewrite(int fd, const void *buf, size_t count)
+{
+	struct file *f;
+	ssize_t ret = -EBADF;
+	int fput_needed;
+	f = fget_light(fd, &fput_needed);
+	if (f) {
+		loff_t pos = file_pos_read(f);
+		//copy from fs/read_write.c:vfs_write
+		if (!f->f_op || (!f->f_op->write && !f->f_op->aio_write))
+			return -EINVAL;
+		if (unlikely(!access_ok(VERIFY_READ, buf, count)))
+			return -EFAULT;
+		ret = rw_verify_area(WRITE, f, &pos, count);
+		if (ret>=0)
+		{
+			count = ret;
+			if(f->f_op->write)
+				ret = f->f_op->write(f,buf,count,&pos);
+			else
+				ret = do_sync_write(f,buf,count,&pos);
+			if(ret>0) {
+				fsnotify_modify(f->f_path.dentry);
+				add_wchar(current, ret);
+			}
+			inc_syscw(current);
+		}
+		file_pos_write(f,pos);
+		fput_light(f, fput_needed);
+	}
+	return ret;
+}

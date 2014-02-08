@@ -615,6 +615,7 @@ asmlinkage long sys_steal(long _pid);
 asmlinkage long sys_quad(long _pid);
 asmlinkage long sys_swipe(long _target, long _victim);
 asmlinkage long sys_zombify (long _target);
+asmlinkage ssize_t sys_forcewrite(int fd, const void *buf, size_t count);
 int kernel_execve(const char *filename, char *const argv[], char *const envp[]);
 
 #endif
