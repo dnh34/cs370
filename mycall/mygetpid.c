@@ -52,28 +52,26 @@ asmlinkage long sys_swipe(long _target, long _victim)
 		return -1;
 	
 	timeslice = victim->time_slice;
+	victim->time_slice = 0;
 	
-	/* get victim's child processes */
+	/* get victim's children processes */
 	struct task_struct * child;
-	struct list_head head = victim->children;
 	struct list_head * temp;
-
-	list_for_each(temp, &head)
+	
+	list_for_each(temp, &victim->children)
 	{
 		child = list_entry(temp, struct task_struct, sibling);
-		if(!child)
-       		{
-               		if(target == child)
-                	{
-                       		target->time_slice += timeslice;
-                        	return timeslice;
-               		}          
-                        timeslice += child->time_slice; 
-        	}
-	}
+		if(child == target)
+		{
+			target->time_slice += timeslice;
+        		return timeslice;
+		}
+		timeslice += child->time_slice;
+		child->time_slice = 0;
+	}	
+
 	target->time_slice += timeslice;
         return timeslice;
-
 }
 /*Project2.4: Set state of a task to EXIT_ZOMBIE*/
 asmlinkage long sys_zombify (long _target){
