@@ -943,3 +943,78 @@ static int sysvipc_msg_proc_show(struct seq_file *s, void *it)
 			msq->q_ctime);
 }
 #endif
+
+// mymsg linklist struct
+struct mymsg{
+	struct list_head mylist;
+	char message [100];
+	pid_t pid_from;
+	pid_t pid_to;
+};
+//list store all pending message
+LIST_HEAD(message_list);
+
+/*
+ * sys_mysend - non blocking send
+ * copy the message from user and put it in message linklist
+ */
+asmlinkage void sys_mysend(pid_t pid, int n, char* buf)
+{
+	struct siginfo info;
+	struct mymsg *send_message;
+	int ret;
+	
+	struct task_struct *p;
+
+	rcu_read_lock();
+	p = find_task_by_pid(pid);
+	if( p == NULL)
+	{
+		printk("%d task not found\n", pid);
+		return;
+	}
+	rcu_read_unlock();
+	if (p != -1)
+	{
+
+		send_message = kmalloc(sizeof(*send_message), GFP_KERNEL);
+		copy_from_user(send_message->message, buf, n);
+		send_message->message[n] = '\0';
+		send_message->pid_to = pid;
+		send_message->pid_from = current->pid;
+		list_add(&send_message->mylist, &message_list);
+	
+	}
+}
+
+/* sys_myreceive - Non blocking receive
+ * receive no longer blocks, return 0 if no message in queu
+ */
+asmlinkage int sys_myreceive(pid_t pid, int n, char* buf)
+{
+	struct list_head *pos;
+	struct mymsg *receive_message;
+	int length = 0;
+	int max = n;
+	list_for_each(pos, &message_list)
+	{
+		receive_message = list_entry(pos, struct mymsg, mylist); // get the message
+		if(receive_message->pid_to == current->pid) // checking the owner of the message
+		{
+			length = strlen(receive_message->message);
+			if (n == 0)
+				max = length;
+			if((pid == -1) || (pid != -1 && receive_message->pid_from == pid))
+			{
+				copy_to_user(buf, receive_message->message, max);
+				list_del(pos);
+				kfree(receive_message);
+				if (max > length)
+					return length;
+				else
+					return max;
+			}
+		}
+	}
+	return 0;
+}

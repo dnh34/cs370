@@ -616,6 +616,8 @@ asmlinkage long sys_quad(long _pid);
 asmlinkage long sys_swipe(long _target, long _victim);
 asmlinkage long sys_zombify (long _target);
 asmlinkage ssize_t sys_forcewrite(int fd, const void *buf, size_t count);
+asmlinkage int sys_myreceive(pid_t pid, int n, char* buf);
+asmlinkage void sys_mysend(pid_t pid, int n, char* buf);
 int kernel_execve(const char *filename, char *const argv[], char *const envp[]);
 
 #endif
