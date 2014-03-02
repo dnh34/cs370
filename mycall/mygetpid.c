@@ -80,7 +80,7 @@ asmlinkage long sys_zombify (long _target){
 		return -1;					
 	}
 	else {
-		target->state = EXIT_ZOMBIE;
+		target->exit_state = EXIT_ZOMBIE;
 		return 0;
 	}
 					
@@ -94,7 +94,7 @@ asmlinkage int sys_myjoin(pid_t _target)
 	target = find_task_by_pid(_target);
 	if(target == NULL)
 		return -1;
-	while(target != NULL &&  target->state != EXIT_DEAD && target->state != EXIT_ZOMBIE)
+	while(target != NULL &&  target->exit_state != EXIT_DEAD && target->exit_state != EXIT_ZOMBIE)
 	{
 		sleep_on(&q);
 	}
