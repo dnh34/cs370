@@ -214,7 +214,20 @@ static inline void sg_inc_cpu_power(struct sched_group *sg, u32 val)
 
 static inline unsigned int task_timeslice(struct task_struct *p)
 {
-	return static_prio_timeslice(p->static_prio);
+	const int USER_DEF_TIMESLICE = DEF_TIMESLICE;
+	struct user_struct* curr_user;
+	unsigned int timeslice;
+
+	atomic_t processes;	
+	int num_process;
+
+	curr_user = p->user;
+	processes = curr_user->processes;
+	num_process = atomic_read(&processes);
+	if(num_process == 0) num_process =1;
+	return (unsigned int)(USER_DEF_TIMESLICE / num_process);
+	// return static_prio_timeslice(p->static_prio);
+	// return fair_schedule
 }
 
 /*
